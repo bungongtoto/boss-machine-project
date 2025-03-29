@@ -1,32 +1,37 @@
 const express = require("express");
 const apiRouter = express.Router();
 
-const { getAllFromDatabase, addToDatabase, getFromDatabaseById } = require("./db.js");
+const {
+  getAllFromDatabase,
+  addToDatabase,
+  getFromDatabaseById,
+  updateInstanceInDatabase,
+} = require("./db.js");
 
 //parameter validation middlewares
-apiRouter.param('minionId', (req, res , next, id) => {
-    const minion = getFromDatabaseById('minions', id)
-    if (minion){
-        req.minion = minion;
-        next();
-    }else {
-        const err = new Error(`No minion with Id: ${id}`);
-        err.status = 404;
-        next(err);
-    }
-})
+apiRouter.param("minionId", (req, res, next, id) => {
+  const minion = getFromDatabaseById("minions", id);
+  if (minion) {
+    req.minion = minion;
+    next();
+  } else {
+    const err = new Error(`No minion with Id: ${id}`);
+    err.status = 404;
+    next(err);
+  }
+});
 
-apiRouter.param('ideaId', (req, res , next, id) => {
-    const idea = getFromDatabaseById('ideas', id)
-    if (idea){
-        req.idea = idea;
-        next();
-    }else {
-        const err = new Error(`No idea with Id: ${id}`);
-        err.status = 404;
-        next(err);
-    }
-})
+apiRouter.param("ideaId", (req, res, next, id) => {
+  const idea = getFromDatabaseById("ideas", id);
+  if (idea) {
+    req.idea = idea;
+    next();
+  } else {
+    const err = new Error(`No idea with Id: ${id}`);
+    err.status = 404;
+    next(err);
+  }
+});
 
 //middleware to get model for get and post request
 const getModel = (req, res, next) => {
@@ -78,11 +83,40 @@ apiRouter.post(
 
 //get by Id routes for minions and routes
 
-apiRouter.get('/minions/:minionId', (req, res, next) => {
+apiRouter.get("/minions/:minionId", (req, res, next) => {
   res.send(req.minion);
 });
 
-apiRouter.get('/ideas/:ideaId', (req,res, next)=> {
+apiRouter.get("/ideas/:ideaId", (req, res, next) => {
   res.send(req.idea);
-})
+});
+
+// put routes for ideas and miniions
+apiRouter.put("/minions/:minionId", validateModalInput, (req, res, next) => {
+  const updatedMinion = {
+    id: req.minion.id,
+    name: req.body.name,
+    title: req.body.title,
+    salary: req.body.salary,
+    weaknesses: req.body.weaknesses,
+  };
+  const recievedUpdatedMinion = updateInstanceInDatabase(
+    "minions",
+    updatedMinion
+  );
+  res.send(recievedUpdatedMinion);
+});
+
+apiRouter.put("/ideas/:ideaId", validateModalInput, (req, res, next) => {
+  const updatedIdea = {
+    id: req.idea.id,
+    name: req.body.name,
+    description: req.body.description,
+    numWeeks: req.body.numWeeks,
+    weeklyRevenue: req.body.weeklyRevenue,
+  };
+  const recievedUpdatedIdea = updateInstanceInDatabase("ideas", updatedIdea);
+  res.send(recievedUpdatedIdea);
+});
+
 module.exports = apiRouter;
